@@ -7,18 +7,39 @@ import com.vaultcli.util.EncryptionUtil;
 
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.Properties;
+import java.io.InputStream;
 
 public class PasswordService {
+    private static final String CONFIG_FILE = "/config.properties";
+    private static final String ENCRYPTION_KEY_PROPERTY = "encryption.key";
+
     private final PasswordEntryDao passwordEntryDao;
     private final String encryptionKey;
+
+    public PasswordService() {
+        this(new PasswordEntryDaoImpl(), loadEncryptionKey());
+    }
 
     public PasswordService(PasswordEntryDao passwordEntryDao, String encryptionKey) {
         this.passwordEntryDao = passwordEntryDao;
         this.encryptionKey = encryptionKey;
     }
 
-    public PasswordService() {
-        this(new PasswordEntryDaoImpl(), "tajny_klic_123456"); // upravit
+    private static String loadEncryptionKey() {
+        Properties props = new Properties();
+        try (InputStream input = PasswordService.class.getResourceAsStream(CONFIG_FILE)) {
+            props.load(input);
+            String key = props.getProperty(ENCRYPTION_KEY_PROPERTY).trim();
+            System.out.println(key);
+
+            if (key.length() != 16 && key.length() != 24 && key.length() != 32) {
+                throw new IllegalStateException("Klíč musí mít přesně 16, 24 nebo 32 znaků! Aktuální délka: " + key.length());
+            }
+            return key;
+        } catch (Exception e) {
+            throw new RuntimeException("Chyba při načítání klíče: " + e.getMessage(), e);
+        }
     }
 
     public boolean addPassword(int userId, String serviceName, String plainPassword) {

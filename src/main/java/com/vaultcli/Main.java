@@ -31,27 +31,38 @@ public class Main {
     }
 
     private static void showAuthMenu() {
-        System.out.println("\n1. Přihlásit se");
-        System.out.println("2. Registrovat se");
-        System.out.println("3. Ukončit aplikaci");
-        System.out.print("Vyberte možnost (číslo): ");
+        boolean authRunning = true;
+        while (authRunning) {
+            System.out.println("\n1. Přihlásit se");
+            System.out.println("2. Registrovat se");
+            System.out.println("3. Ukončit aplikaci");
+            System.out.print("Vyberte možnost (číslo): ");
 
-        int choice = scanner.nextInt();
-        scanner.nextLine();
+            if (scanner.hasNextInt()) {
+                int choice = scanner.nextInt();
+                scanner.nextLine();
 
-        switch (choice) {
-            case 1:
-                login();
-                break;
-            case 2:
-                register();
-                break;
-            case 3:
-                System.out.println("Ukončuji aplikaci...");
-                System.exit(0);
-                break;
-            default:
-                System.out.println("Neplatná volba!");
+                switch (choice) {
+                    case 1:
+                        login();
+                        authRunning = false;
+                        break;
+                    case 2:
+                        register();
+                        authRunning = false;
+                        break;
+                    case 3:
+                        System.out.println("Ukončuji aplikaci...");
+                        authRunning = false;
+                        System.exit(0);
+                        break;
+                    default:
+                        System.out.println("Neplatná volba!");
+                }
+            } else {
+                System.out.println("Zadejte prosím platné číslo!");
+                scanner.nextLine();
+            }
         }
     }
 
