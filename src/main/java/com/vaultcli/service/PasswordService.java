@@ -33,8 +33,8 @@ public class PasswordService {
             String key = props.getProperty(ENCRYPTION_KEY_PROPERTY).trim();
             System.out.println(key);
 
-            if (key.length() != 16 && key.length() != 24 && key.length() != 32) {
-                throw new IllegalStateException("Klíč musí mít přesně 16, 24 nebo 32 znaků! Aktuální délka: " + key.length());
+            if (key.length() != 16) {
+                throw new IllegalStateException("Klíč musí mít přesně 16 znaků! Aktuální délka: " + key.length());
             }
             return key;
         } catch (Exception e) {
