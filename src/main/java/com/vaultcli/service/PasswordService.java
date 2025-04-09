@@ -1,10 +1,14 @@
 package com.vaultcli.service;
 
+import com.vaultcli.exceptions.DuplicateEntryException;
+import com.vaultcli.exceptions.EncryptionException;
+import com.vaultcli.exceptions.PasswordNotFoundException;
 import com.vaultcli.model.PasswordEntry;
 import com.vaultcli.dao.PasswordEntryDao;
 import com.vaultcli.dao.impl.PasswordEntryDaoImpl;
 import com.vaultcli.util.EncryptionUtil;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.Properties;
@@ -37,15 +41,14 @@ public class PasswordService {
                 throw new IllegalStateException("Klíč musí mít přesně 16 znaků! Aktuální délka: " + key.length());
             }
             return key;
-        } catch (Exception e) {
+        } catch (IOException e) {
             throw new RuntimeException("Chyba při načítání klíče: " + e.getMessage(), e);
         }
     }
 
     public boolean addPassword(int userId, String serviceName, String plainPassword) {
         if (passwordExists(userId, serviceName)) {
-            System.err.println("Heslo pro službu " + serviceName + " již existuje!");
-            return false;
+            throw new DuplicateEntryException(serviceName);
         }
 
         try {
@@ -59,8 +62,8 @@ public class PasswordService {
             entry.setIv(parts[0]);
 
             return passwordEntryDao.addPasswordEntry(entry);
-        } catch (Exception e) {
-            System.err.println("Chyba při šifrování hesla: " + e.getMessage());
+        } catch (EncryptionException e) {
+            // output ošetřen v jiné vrstvě
             return false;
         }
     }
@@ -68,23 +71,21 @@ public class PasswordService {
     public String getPassword(int userId, String serviceName) {
         PasswordEntry entry = passwordEntryDao.getPasswordEntry(userId, serviceName);
         if (entry == null) {
-            System.err.println("Heslo pro službu " + serviceName + " nebylo nalezeno");
-            return null;
+            throw new PasswordNotFoundException(serviceName);
         }
 
         try {
             String encryptedData = entry.getIv() + ":" + entry.getEncryptedPassword();
             return EncryptionUtil.decrypt(encryptedData, encryptionKey);
-        } catch (Exception e) {
-            System.err.println("Chyba při dešifrování hesla: " + e.getMessage());
+        } catch (EncryptionException e) {
+            // output ošetřen v jiné vrstvě
             return null;
         }
     }
 
     public boolean updatePassword(int userId, String serviceName, String newPlainPassword) {
-        if (!passwordExists(userId, serviceName)) {
-            System.err.println("Heslo pro službu " + serviceName + " neexistuje!");
-            return false;
+        if (passwordExists(userId, serviceName)) {
+            throw new DuplicateEntryException(serviceName);
         }
 
         try {
@@ -98,16 +99,15 @@ public class PasswordService {
             entry.setIv(parts[0]);
 
             return passwordEntryDao.updatePasswordEntry(entry);
-        } catch (Exception e) {
-            System.err.println("Chyba při aktualizaci hesla: " + e.getMessage());
+        } catch (EncryptionException e) {
+            // output ošetřen v jiné vrstvě
             return false;
         }
     }
 
     public boolean deletePassword(int userId, String serviceName) {
-        if (!passwordExists(userId, serviceName)) {
-            System.err.println("Heslo pro službu " + serviceName + " neexistuje!");
-            return false;
+        if (passwordExists(userId, serviceName)) {
+            throw new DuplicateEntryException(serviceName);
         }
         return passwordEntryDao.deletePasswordEntry(userId, serviceName);
     }

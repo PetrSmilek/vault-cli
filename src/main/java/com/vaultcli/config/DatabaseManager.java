@@ -1,5 +1,7 @@
 package com.vaultcli.config;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.InputStream;
 import java.sql.*;
 import java.util.Properties;
@@ -15,7 +17,7 @@ public class DatabaseManager {
                 .getResourceAsStream("application.properties")) {
 
             if (input == null) {
-                throw new RuntimeException("Soubor application.properties nebyl nalezen v classpath");
+                throw new FileNotFoundException("Soubor application.properties nebyl nalezen v classpath");
             }
 
             Properties props = new Properties();
@@ -29,7 +31,7 @@ public class DatabaseManager {
                 throw new RuntimeException("Chybějící konfigurace DB v application.properties");
             }
 
-        } catch (Exception e) {
+        } catch (IOException e) {
             throw new RuntimeException("Chyba při načítání konfigurace databáze", e);
         }
     }
