@@ -15,7 +15,7 @@ public class EncryptionUtil {
     private static final int KEY_LENGTH_BYTES = 16; // Pouze pro AES-128
     private static final int IV_LENGTH = 16;
 
-    public static String encrypt(String plaintext, String rawKey) throws EncryptionException {
+    public static String encrypt(String plaintext, String rawKey) {
         try {
             validateKey(rawKey);
 
@@ -37,7 +37,7 @@ public class EncryptionUtil {
         }
     }
 
-    public static String decrypt(String encryptedData, String rawKey) throws EncryptionException {
+    public static String decrypt(String encryptedData, String rawKey) {
         try {
             validateKey(rawKey);
             byte[] keyBytes = rawKey.getBytes(StandardCharsets.UTF_8);

@@ -1,5 +1,6 @@
 package com.vaultcli.service;
 
+import com.vaultcli.exceptions.DataAccessException;
 import com.vaultcli.exceptions.DuplicateEntryException;
 import com.vaultcli.exceptions.EncryptionException;
 import com.vaultcli.exceptions.PasswordNotFoundException;
@@ -33,6 +34,10 @@ public class PasswordService {
     private static String loadEncryptionKey() {
         Properties props = new Properties();
         try (InputStream input = PasswordService.class.getResourceAsStream(CONFIG_FILE)) {
+            if (input == null) {
+                throw new IllegalStateException("Konfigurační soubor " + CONFIG_FILE + " nebyl nalezen");
+            }
+
             props.load(input);
             String key = props.getProperty(ENCRYPTION_KEY_PROPERTY).trim();
             System.out.println(key);
@@ -61,10 +66,13 @@ public class PasswordService {
             entry.setEncryptedPassword(parts[1]);
             entry.setIv(parts[0]);
 
-            return passwordEntryDao.addPasswordEntry(entry);
+            boolean success = passwordEntryDao.addPasswordEntry(entry);
+            if (!success) {
+                throw new DataAccessException("Nepodařilo se přidat heslo pro službu '" + serviceName + "' pro uživatele ID " + userId);
+            }
+            return success;
         } catch (EncryptionException e) {
-            // output ošetřen v jiné vrstvě
-            return false;
+            throw new EncryptionException("Služba '" + serviceName + "' chyba: " + e.getMessage());
         }
     }
 
@@ -78,14 +86,13 @@ public class PasswordService {
             String encryptedData = entry.getIv() + ":" + entry.getEncryptedPassword();
             return EncryptionUtil.decrypt(encryptedData, encryptionKey);
         } catch (EncryptionException e) {
-            // output ošetřen v jiné vrstvě
-            return null;
+            throw new EncryptionException("Služba '" + serviceName + "' chyba: " + e.getMessage());
         }
     }
 
     public boolean updatePassword(int userId, String serviceName, String newPlainPassword) {
-        if (passwordExists(userId, serviceName)) {
-            throw new DuplicateEntryException(serviceName);
+        if (!passwordExists(userId, serviceName)) {
+            throw new PasswordNotFoundException(serviceName);
         }
 
         try {
@@ -98,18 +105,26 @@ public class PasswordService {
             entry.setEncryptedPassword(parts[1]);
             entry.setIv(parts[0]);
 
-            return passwordEntryDao.updatePasswordEntry(entry);
+            boolean success = passwordEntryDao.updatePasswordEntry(entry);
+            if (!success) {
+                throw new DataAccessException("Nepodařilo se aktualizovat heslo pro službu '" + serviceName + "' pro uživatele ID " + userId);
+            }
+            return success;
         } catch (EncryptionException e) {
-            // output ošetřen v jiné vrstvě
-            return false;
+            throw new EncryptionException("Služba '" + serviceName + "' chyba: " + e.getMessage());
         }
     }
 
     public boolean deletePassword(int userId, String serviceName) {
-        if (passwordExists(userId, serviceName)) {
-            throw new DuplicateEntryException(serviceName);
+        if (!passwordExists(userId, serviceName)) {
+            throw new PasswordNotFoundException(serviceName);
         }
-        return passwordEntryDao.deletePasswordEntry(userId, serviceName);
+
+        boolean success = passwordEntryDao.deletePasswordEntry(userId, serviceName);
+        if (!success) {
+            throw new DataAccessException("Nepodařilo se smazat heslo pro službu '" + serviceName + "' pro uživatele ID " + userId);
+        }
+        return success;
     }
 
     public boolean passwordExists(int userId, String serviceName) {
