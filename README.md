@@ -52,6 +52,6 @@ Terminálová aplikace pro bezpečné ukládání hesel s **šifrováním AES-12
 mvn test
 ```
 
-Základní unit testy pokrývají klíčové funkce šifrování a business logiky.
+Projekt obsahuje unit testy pokrývající klíčové funkce šifrování a business logiky a integrační testy zaměřené na správnou interakci s databází.
 
 ---

@@ -1,9 +1,11 @@
 package com.vaultcli.unit.service;
 
 import com.vaultcli.dao.PasswordEntryDao;
+import com.vaultcli.exceptions.DuplicateEntryException;
 import com.vaultcli.model.PasswordEntry;
 import com.vaultcli.service.PasswordService;
 import com.vaultcli.util.EncryptionUtil;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -47,7 +49,9 @@ class PasswordServiceTest {
     void addPasswordWhenPasswordExists() {
         when(mockDao.getPasswordEntry(1, "service1")).thenReturn(new PasswordEntry());
 
-        assertFalse(passwordService.addPassword(1, "service1", "plainPassword"));
+        assertThrows(DuplicateEntryException.class, () -> {
+            passwordService.addPassword(1, "service1", "plainPassword");
+        });
     }
 
     @Test
