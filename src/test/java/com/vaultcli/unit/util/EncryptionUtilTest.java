@@ -1,5 +1,6 @@
-package com.vaultcli.util;
+package com.vaultcli.unit.util;
 
+import com.vaultcli.util.EncryptionUtil;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 

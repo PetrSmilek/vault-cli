@@ -1,7 +1,8 @@
-package com.vaultcli.service;
+package com.vaultcli.unit.service;
 
 import com.vaultcli.dao.PasswordEntryDao;
 import com.vaultcli.model.PasswordEntry;
+import com.vaultcli.service.PasswordService;
 import com.vaultcli.util.EncryptionUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
